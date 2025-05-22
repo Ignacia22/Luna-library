@@ -1,3 +1,5 @@
+const bookServices = require('../services/bookServices');
+
 module.exports = {
 
 getBooks: async(req, res) => {
@@ -20,6 +22,23 @@ createBooks: async(req, res) => {
         res.status(500).json({
             message: "Error al crear el libro: " + error.message,
         })
+    }
+},
+
+deleteBook: async(req, res) => {
+    try {
+    const {id} = req.params;
+
+    if (!id) { return res.status(400).json({ message: "El ID del libro es obligatorio" });}
+
+    const result = await bookServices.deleteBook(id);
+
+    if(!result) {return res.status(404).json({ message: "Libro no encontrado" })};
+    res.status(204).send();
+
+    } catch (error) {
+        console.error(error); 
+        res.status(500).json({ message: "Error al eliminar el libro" });
     }
 }
 
