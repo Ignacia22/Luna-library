@@ -1,14 +1,18 @@
 const mongoose = require('mongoose');
 
 const bookSchema = new mongoose.Schema({
-    title: {type: String, require: true, unique: true},
-    author: {type: String, require: true},
-    description: {type: String, require: true, unique: true},
-    image: {type: String, require: true, unique: true},
-    price: {type: Number, require: true},
-    stock: {type: Number, require: true},
-    category: {type: String, require: true}
-})
+    title: {type: String, required: true, unique: true}, 
+    author: {type: String, required: true},
+    description: {type: String, required: true}, 
+    image: {type: String, required: true}, 
+    price: {type: Number, required: true},
+    stock: {type: Number, required: true},
+    category: {type: String, required: true}
+},
+{
+    versionKey: false // ← Esto elimina el __v
+}
+);
 
 
 const Book = mongoose.model('Book', bookSchema, 'Libreria');
