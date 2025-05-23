@@ -1,5 +1,5 @@
-const app = require('./src/server'); 
-const dbCon = require('./src/config/dbCon');
+import app from './src/server';  
+import dbCon from './src/config/dbCon';
 
 
 dbCon().then((res) => {

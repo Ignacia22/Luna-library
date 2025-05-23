@@ -1,7 +1,8 @@
-const imageServices = require('../services/imageServices');
+import { Request, Response } from 'express';
+import imageServices from '../services/imageServices';
 
-module.exports = {
-    uploadImage: async (req, res) => {
+export default {
+    uploadImage: async (req: Request, res: Response) => {
         console.log("🚀 INICIO - uploadImage ejecutándose");
 
     try {
@@ -12,7 +13,8 @@ module.exports = {
         
         if (!req.file) {
             console.log("❌ No hay req.file");
-            return res.status(400).json({ message: "No se recibió ninguna imagen" });
+            res.status(400).json({ message: "No se recibió ninguna imagen" });
+            return;
         }
 
         // 🆕 Añadir logs antes de llamar al servicio
@@ -25,7 +27,7 @@ module.exports = {
             image: imageData
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("❌ Error completo:", error); // 🆕 Error completo
         console.error("❌ Error message:", error.message); // 🆕 Solo el mensaje
         console.error("❌ Error stack:", error.stack); // 🆕 Stack trace
@@ -36,12 +38,13 @@ module.exports = {
 },
 
 
-    deleteImage: async(req, res) => {
+    deleteImage: async(req: Request, res: Response) => {
         try {
             const { publicId } = req.params;
 
             if (!publicId) {
-                return res.status(400).json({ message: "Public ID es requerido" });
+                res.status(400).json({ message: "Public ID es requerido" });
+                return;
             }
 
             await imageServices.deleteImage(publicId);
@@ -49,7 +52,7 @@ module.exports = {
             res.status(200).json({
                 message: "Imagen eliminada exitosamente"
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("❌ Error al eliminar imagen:", error);
             res.status(500).json({
                 message: "Error al eliminar imagen: " + error.message

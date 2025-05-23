@@ -1,10 +1,11 @@
-const Router = require('express')
-const booksController = require('../controllers/booksController')
-const { upload } = require('../config/cloudinary');
+import { Request, Response, NextFunction, Router } from 'express';
+import booksController from '../controllers/booksController';
+import { upload } from '../config/cloudinary';
+
 
 const booksRoutes = Router();
 
-const conditionalUpload = (req, res, next) => {
+const conditionalUpload = (req: Request, res: Response, next: NextFunction) => {
     console.log("🔧 Middleware condicional ejecutándose");
     console.log("🔧 Content-Type:", req.headers['content-type']);
     
@@ -24,4 +25,4 @@ booksRoutes.get('/books/:id', booksController.getBook);
 booksRoutes.post('/books', conditionalUpload, booksController.createBooks); // 🆕
 booksRoutes.delete('/books/:id', booksController.deleteBook)
 
-module.exports = booksRoutes;
+export default booksRoutes;

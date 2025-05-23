@@ -1,45 +1,54 @@
-const bookServices = require('../services/bookServices');
+import { Request, Response } from 'express'; 
+import bookServices from '../services/bookServices';
+import { IPaginationQuery } from '../types/book.types';
 
-module.exports = {
+// Extender Request para manejar archivos
+interface MulterRequest extends Request {
+    files?: any[];
+}
 
-getBooks: async(req, res) => {
+export default {
+
+getBooks: async(req: Request<{}, {}, {}, IPaginationQuery>, res: Response) => {
     try{
         console.log("🔍 Query params recibidos:", req.query);
         
-        const result = await bookServices.getBooks(req.query); // Pasar req.query
+        const result = await bookServices.getBooks(req.query);
         
         res.status(200).json(result);
-    } catch(error) {
+    } catch(error: any) { // 🆕 Tipar error
         console.error("❌ Error en controlador:", error);
         res.status(500).json({
-            message: "Ha ocurrido un error al obtener los libros: " + error.message,
-        })
+            message: "Ha ocurrido un error al obtener los libros: " + (error?.message || 'Error desconocido'),
+        });
     }
 },
 
-getBook: async(req, res) => {  
+getBook: async(req: Request, res: Response) => {  
     try {
         const {id} = req.params;
 
         if (!id) { 
-            return res.status(400).json({ message: "El ID del libro es obligatorio" });
+            res.status(400).json({ message: "El ID del libro es obligatorio" });
+            return;
         }
 
         const book = await bookServices.getBook(id);  
 
         if(!book) {
-            return res.status(404).json({ message: "Libro no encontrado" });
+            res.status(404).json({ message: "Libro no encontrado" });
+            return;
         }
         
         res.status(200).json(book);  
 
-    } catch (error) {
+    } catch (error: any) { // 🆕 Tipar error
         console.error(error); 
         res.status(500).json({ message: "Error al obtener el libro" });
     }
 },
 
-createBooks: async(req, res) => {
+createBooks: async(req: any, res: Response) => { // 🆕 Añadir tipos
     try{
         console.log("📚 === INICIO createBooks ===");
         console.log("📋 Content-Type:", req.headers['content-type']);
@@ -50,7 +59,7 @@ createBooks: async(req, res) => {
         
         // 🆕 Si hay archivos, buscar la imagen
         if (req.files && req.files.length > 0) {
-            const imageFile = req.files.find(file => file.fieldname === 'image');
+            const imageFile = req.files.find((file: any) => file.fieldname === 'image');
             if (imageFile) {
                 body.image = imageFile.path;
                 console.log("📷 Imagen añadida:", body.image);
@@ -58,16 +67,18 @@ createBooks: async(req, res) => {
         }
 
         if (!body || Object.keys(body).length === 0) {
-            return res.status(400).json({ 
+            res.status(400).json({ 
                 message: "No se recibieron datos." 
             });
+            return;
         }
 
         const { title, author, description, price, stock, category } = body;
         if (!title || !author || !description || !price || !stock || !category) {
-            return res.status(400).json({ 
+            res.status(400).json({ 
                 message: "Campos requeridos: title, author, description, price, stock, category" 
             });
+            return;
         }
 
         const newBook = await bookServices.createBooks(body);
@@ -76,26 +87,33 @@ createBooks: async(req, res) => {
             book: newBook
         });
 
-    } catch(error){
+    } catch(error: any){ // 🆕 Tipar error
         console.error("❌ Error completo:", error);
         res.status(500).json({
-            message: "Error al crear el libro: " + error.message,
-        })
+            message: "Error al crear el libro: " + (error?.message || 'Error desconocido'),
+        });
     }
 },
 
-deleteBook: async(req, res) => {
+deleteBook: async(req: Request, res: Response) => { // 🆕 Añadir tipos
     try {
-    const {id} = req.params;
+        const {id} = req.params;
 
-    if (!id) { return res.status(400).json({ message: "El ID del libro es obligatorio" });}
+        if (!id) { 
+            res.status(400).json({ message: "El ID del libro es obligatorio" });
+            return;
+        }
 
-    const result = await bookServices.deleteBook(id);
+        const result = await bookServices.deleteBook(id);
 
-    if(!result) {return res.status(404).json({ message: "Libro no encontrado" })};
-    res.status(204).send();
+        if(!result) {
+            res.status(404).json({ message: "Libro no encontrado" });
+            return;
+        }
+        
+        res.status(204).send();
 
-    } catch (error) {
+    } catch (error: any) { // 🆕 Tipar error
         console.error(error); 
         res.status(500).json({ message: "Error al eliminar el libro" });
     }

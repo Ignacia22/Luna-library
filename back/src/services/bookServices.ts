@@ -1,22 +1,21 @@
-const axios = require('axios');
-const Book = require('../models/Book');
-const mongoose = require('mongoose');
+import axios from 'axios';
+import Book from '../models/Book';
+import mongoose from 'mongoose';
+import { IBook, ICreateBookRequest, IPaginationQuery, IPaginationResponse } from '../types/book.types';
 
-module.exports = {
+export default {
 
-
-
-getBooks: async(queryParams = {}) => {
+getBooks: async(queryParams: IPaginationQuery = {}): Promise<IPaginationResponse> => {
     try {
         console.log("🔍 Parámetros recibidos:", queryParams);
         
         // Paginación (ya funciona)
-        const page = parseInt(queryParams.page) || 1;
-        const limit = parseInt(queryParams.limit) || 10;
+        const page = parseInt(queryParams.page || '1') || 1;
+        const limit = parseInt(queryParams.limit || '10') || 10;
         const skip = (page - 1) * limit;
         
-        // 🆕 FILTROS NUEVOS
-        const searchFilters = {};
+        // 🆕 FILTROS NUEVOS - Tipar como any para MongoDB
+        const searchFilters: any = {};
         
         // Filtro por categoría
         if (queryParams.category) {
@@ -46,14 +45,14 @@ getBooks: async(queryParams = {}) => {
         console.log("🔍 Filtros aplicados:", searchFilters);
         
         // Consulta con filtros y paginación
-        const books = await Book.find(searchFilters) // 🆕 Ahora con filtros
+        const books: IBook[] = await Book.find(searchFilters)
             .skip(skip)
             .limit(limit)
-            .sort({ _id: -1 }); // Más recientes primero
+            .sort({ _id: -1 });
             
         // Contar total CON filtros
-        const totalBooks = await Book.countDocuments(searchFilters); // 🆕 Con filtros
-        const totalPages = Math.ceil(totalBooks / limit);
+        const totalBooks: number = await Book.countDocuments(searchFilters);
+        const totalPages: number = Math.ceil(totalBooks / limit);
         
         console.log(`📊 Encontrados: ${books.length} libros de ${totalBooks} total`);
         
@@ -68,38 +67,37 @@ getBooks: async(queryParams = {}) => {
                 hasPrevPage: page > 1
             }
         };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error al consultar la base de datos:", error);
         throw new Error("Error al obtener los libros");
     }
 },
 
-
-getBook: async(id) => {
+getBook: async(id: string): Promise<IBook | null> => {
     try {
         if (!mongoose.isValidObjectId(id)) {
             throw new Error('ID de libro inválido');
         }
 
-        const book = await Book.findById(id);
+        const book: IBook | null = await Book.findById(id);
         return book;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error al consultar el libro:", error);
         throw new Error("Error al obtener el libro");
     }
 },
 
-createBooks: async(book) => {
+createBooks: async(book: ICreateBookRequest | any): Promise<IBook> => {
     try {
-        const newBook = await Book.create(book)
+        const newBook: IBook = await Book.create(book);
         return newBook;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error al crear el libro:", error);
         throw new Error("Error al crear el libro");
     }
 },
 
-deleteBook: async (id) => {
+deleteBook: async (id: string): Promise<any | null> => {
     try {
         // Validar que el ID sea un ObjectId válido
         if (!mongoose.isValidObjectId(id)) {
@@ -113,11 +111,10 @@ deleteBook: async (id) => {
         }
 
         return result;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error al eliminar el libro:', error);
-        throw new Error(`Error al eliminar el libro: ${error.message}`);
+        throw new Error(`Error al eliminar el libro: ${error?.message || 'Error desconocido'}`);
     }
 }
 
 }
-

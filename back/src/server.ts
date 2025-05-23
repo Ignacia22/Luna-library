@@ -1,8 +1,8 @@
 require('dotenv').config(); 
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const router = require('./routes/index');
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import router from './routes/index';
 
 const app = express();
 
@@ -15,4 +15,4 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(router); // Las rutas van DESPUÉS
 
-module.exports = app;
+export default app;
