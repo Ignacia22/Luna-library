@@ -4,24 +4,72 @@ const mongoose = require('mongoose');
 
 module.exports = {
 
-getBooks: async() => {
+
+
+getBooks: async(queryParams = {}) => {
     try {
-        console.log("🔍 Ejecutando consulta en la base de datos...");
+        console.log("🔍 Parámetros recibidos:", queryParams);
         
-        // Ver todas las bases de datos en tu cluster
-        const admin = mongoose.connection.db.admin();
-        const dbs = await admin.listDatabases();
-        console.log("🗄️ Todas las bases de datos:", dbs.databases.map(db => db.name));
+        // Paginación (ya funciona)
+        const page = parseInt(queryParams.page) || 1;
+        const limit = parseInt(queryParams.limit) || 10;
+        const skip = (page - 1) * limit;
         
-        // Ver en cuál base de datos estás actualmente
-        console.log("📍 Base de datos actual:", mongoose.connection.db.databaseName);
+        // 🆕 FILTROS NUEVOS
+        const searchFilters = {};
         
-        const books = await Book.find();
-        console.log("📊 Libros encontrados:", books);
-        console.log("📊 Cantidad:", books.length);
-        return books;
+        // Filtro por categoría
+        if (queryParams.category) {
+            searchFilters.category = { $regex: queryParams.category, $options: 'i' };
+            console.log("🏷️ Filtrando por categoría:", queryParams.category);
+        }
+        
+        // Filtro por autor
+        if (queryParams.author) {
+            searchFilters.author = { $regex: queryParams.author, $options: 'i' };
+            console.log("👤 Filtrando por autor:", queryParams.author);
+        }
+        
+        // Filtro por precio
+        if (queryParams.minPrice || queryParams.maxPrice) {
+            searchFilters.price = {};
+            if (queryParams.minPrice) {
+                searchFilters.price.$gte = parseFloat(queryParams.minPrice);
+                console.log("💰 Precio mínimo:", queryParams.minPrice);
+            }
+            if (queryParams.maxPrice) {
+                searchFilters.price.$lte = parseFloat(queryParams.maxPrice);
+                console.log("💰 Precio máximo:", queryParams.maxPrice);
+            }
+        }
+        
+        console.log("🔍 Filtros aplicados:", searchFilters);
+        
+        // Consulta con filtros y paginación
+        const books = await Book.find(searchFilters) // 🆕 Ahora con filtros
+            .skip(skip)
+            .limit(limit)
+            .sort({ _id: -1 }); // Más recientes primero
+            
+        // Contar total CON filtros
+        const totalBooks = await Book.countDocuments(searchFilters); // 🆕 Con filtros
+        const totalPages = Math.ceil(totalBooks / limit);
+        
+        console.log(`📊 Encontrados: ${books.length} libros de ${totalBooks} total`);
+        
+        return {
+            books,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalBooks,
+                limit,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        };
     } catch (error) {
-        console.error("❌ Error en servicio:", error);
+        console.error("Error al consultar la base de datos:", error);
         throw new Error("Error al obtener los libros");
     }
 },
